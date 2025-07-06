@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# THIS IS THE LEGACY `lls` BASH SCRIPT
+# USE `go install github.com/xhd2015/lls@latest` instead
+
+function lls_history {
+    history|lls-code
+}
+
+base=(
+    $W/tools/manage-config
+    $W/tools/manage-monitor-rules
+    $W/public/protobuf
+    $W/biz-gateway
+    $W/biz-diff-sdk
+    $X/bak-files
+    $X/working
+    ~/Scripts/curl-history.md
+    $X/ox-term
+    $X/go-inspect
+    $X/xgo
+    $X/lifelog
+    ~/Library/"Application Support"/Code/User/snippets/go.mod.json
+    ~/Scripts/sql.md
+    ~/Scripts/debug.md
+)
+
+function lls_worktree {
+    dirs=$(cd $W && find worktree -name .git)
+    for dir in $dirs;do
+        dir=${dir%'.git'}
+        dir=${dir%'/'}
+        echo "code \$W/$dir"
+    done
+}
+
+function lls_worktree_at {
+    if [[ ! -d "$1/.git" ]];then
+        e=${1/"$W/"/'$W/'}
+        e=${e/"$X/"/'$X/'}
+        e=${e/"$HOME/"/'~/'}
+        echo "code $e"
+        return
+    fi
+    list=$(git -C "$1" worktree list|cut -d' ' -f1)
+    for e in $list;do
+        e=${e/"$W/"/'$W/'}
+        e=${e/"$X/"/'$X/'}
+        e=${e/"$HOME/"/'~/'}
+        echo "code $e"
+    done
+}
+
+function lls_pwd {
+    list=$(git worktree list|cut -d' ' -f1)
+    for e in $list;do
+        e=${e/"$W/"/'$W/'}
+        e=${e/"$X/"/'$X/'}
+        e=${e/"$HOME/"/'~/'}
+        echo "code $e"
+    done
+}
+
+# white list mode
+function lls_list {
+    for line in "${base[@]}";do
+        lls_worktree_at "$line"
+    done
+    lls_worktree
+    lls_pwd
+}
+
+function lls {
+    cmd=$(lls_list|kool lines uniq|fzf --no-mouse --no-sort --query="$1")
+    eval "echo -n '$cmd' '->' ' '"
+    eval_cmd=(echo "$cmd")
+    eval "${eval_cmd[@]}"
+    eval "$cmd"
+}
+
+lls "$@"
