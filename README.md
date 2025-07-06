@@ -1,7 +1,10 @@
 # lls
-lls helps developers to quickly navigate through working projects.
+`lls` helps developers to quickly navigate through working projects.
 
-When invoked, lls will find projects from configured locations, and pass to `fzf` to filter based on your selection, then open the project with `code` (VSCode).
+When invoked:
+- `lls` will find projects from configured locations
+- pass to `fzf` to filter based on your selection
+- open the selected project with `code` (VSCode).
 
 It streamlines the operation opening and switching projects inside VSCode and terminal.
 
@@ -15,7 +18,7 @@ go install github.com/xhd2015/lls@latest
 lls
 ```
 
-Edit your projects:
+Configure your projects:
 ```sh
 lls edit
 ```
