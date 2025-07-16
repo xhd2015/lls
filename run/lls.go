@@ -100,6 +100,7 @@ func lls(args []string) error {
 	expandedCmd := expandEnvs(selectedCmd, cfg.Envs)
 
 	// Execute the selected command
+	fmt.Println()
 	fmt.Printf("%s -> %s\n", selectedCmd, expandedCmd)
 	return executeCommand("code", []string{expandedCmd})
 }

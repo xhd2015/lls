@@ -10,10 +10,10 @@ import (
 // expandEnvs expands environment variables using the Envs configuration
 func expandEnvs(path string, envs []string) string {
 	const HOME_PREFIX = "~/"
-	if strings.HasPrefix(path, HOME_PREFIX) {
+	if suff, ok := strings.CutPrefix(path, HOME_PREFIX); ok {
 		home, err := os.UserHomeDir()
 		if err == nil {
-			path = home + path[len(HOME_PREFIX):]
+			path = home + "/" + suff
 		}
 	}
 	return os.Expand(path, func(s string) string {
