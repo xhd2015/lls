@@ -48,7 +48,7 @@ func Main(args []string) error {
 		switch cmd {
 		case "show":
 			return handleShow(cmdArgs)
-		case "edit":
+		case "edit", "config":
 			return handleEdit(cmdArgs)
 		default:
 			if !strings.HasPrefix(cmd, "-") {
@@ -123,6 +123,10 @@ func handleEdit(args []string) error {
 		}
 	}
 
+	var cfg config.Config
+	content, _ := os.ReadFile(conf)
+	json.Unmarshal(content, &cfg)
+
 	stat, statErr := os.Stat(conf)
 	if statErr != nil {
 		if !os.IsNotExist(statErr) {
@@ -144,8 +148,13 @@ func handleEdit(args []string) error {
 		return fmt.Errorf("config file is a directory: %s", conf)
 	}
 
+	openCmd := "code"
+	if cfg.OpenCmd != "" {
+		openCmd = cfg.OpenCmd
+	}
+
 	// prefer code, vim
-	return cmd.New().Stdin(os.Stdin).Run("code", conf)
+	return cmd.New().Stdin(os.Stdin).Run(openCmd, conf)
 }
 
 func getConfigFile(createDir bool, fileName string) (string, error) {

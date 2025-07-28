@@ -102,7 +102,13 @@ func lls(args []string) error {
 	// Execute the selected command
 	fmt.Println()
 	fmt.Printf("%s -> %s\n", selectedCmd, expandedCmd)
-	return executeCommand("code", []string{expandedCmd})
+
+	openCmd := "code"
+	if cfg.OpenCmd != "" {
+		openCmd = cfg.OpenCmd
+	}
+
+	return executeCommand(openCmd, []string{expandedCmd})
 }
 
 // llsWorktreeAt replicates the lls_worktree_at function
