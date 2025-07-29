@@ -1,6 +1,7 @@
 package run
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -48,6 +49,8 @@ func Main(args []string) error {
 		switch cmd {
 		case "show":
 			return handleShow(cmdArgs)
+		case "history":
+			return handleHistory(cmdArgs)
 		case "edit", "config":
 			return handleEdit(cmdArgs)
 		default:
@@ -93,6 +96,59 @@ func handleShow(args []string) error {
 
 	fmt.Println(conf)
 	return nil
+}
+
+func handleHistory(args []string) error {
+	var configFile string
+
+	args, err := flags.String("--config", &configFile).
+		Help("-h,--help", help).
+		Parse(args)
+	if err != nil {
+		return err
+	}
+
+	var conf string
+
+	if configFile != "" {
+		// Use custom config file
+		conf = configFile
+	} else {
+		// Use default config file
+		conf, err = getConfigFile(false, "config.json")
+		if err != nil {
+			return err
+		}
+	}
+
+	var cfg config.Config
+	content, _ := os.ReadFile(conf)
+	json.Unmarshal(content, &cfg)
+
+	if len(cfg.HistoryFiles) == 0 {
+		return fmt.Errorf("history_files is empty")
+	}
+
+	var buf bytes.Buffer
+	for _, file := range cfg.HistoryFiles {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+		buf.Write(content)
+		buf.WriteString("\n")
+	}
+
+	tmpFile, err := os.CreateTemp("", "lls-history-*.txt")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	tmpFile.Write(buf.Bytes())
+	tmpFile.Close()
+
+	return cmd.New().Stdin(os.Stdin).Run("bash", "-c", fmt.Sprintf("cat '%s' | fzf", tmpFile.Name()))
 }
 
 func handleEdit(args []string) error {
