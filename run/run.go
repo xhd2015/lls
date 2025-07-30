@@ -1,7 +1,6 @@
 package run
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/xhd2015/less-gen/flags"
 	"github.com/xhd2015/lls/config"
 	"github.com/xhd2015/xgo/support/cmd"
+	"golang.org/x/term"
 )
 
 // Global debug flag
@@ -100,8 +100,10 @@ func handleShow(args []string) error {
 
 func handleHistory(args []string) error {
 	var configFile string
+	var stdout bool
 
 	args, err := flags.String("--config", &configFile).
+		Bool("--stdout", &stdout).
 		Help("-h,--help", help).
 		Parse(args)
 	if err != nil {
@@ -129,14 +131,23 @@ func handleHistory(args []string) error {
 		return fmt.Errorf("history_files is empty")
 	}
 
-	var buf bytes.Buffer
+	var lines []string
 	for _, file := range cfg.HistoryFiles {
 		content, err := os.ReadFile(file)
 		if err != nil {
 			return err
 		}
-		buf.Write(content)
-		buf.WriteString("\n")
+		lines = append(lines, splitLines(string(content))...)
+	}
+
+	lines = unique(lines)
+
+	isTerminal := term.IsTerminal(int(os.Stdout.Fd()))
+	if stdout || !isTerminal {
+		for _, line := range lines {
+			fmt.Println(line)
+		}
+		return nil
 	}
 
 	tmpFile, err := os.CreateTemp("", "lls-history-*.txt")
@@ -145,10 +156,34 @@ func handleHistory(args []string) error {
 	}
 	defer os.Remove(tmpFile.Name())
 
-	tmpFile.Write(buf.Bytes())
+	tmpFile.WriteString(strings.Join(lines, "\n"))
 	tmpFile.Close()
 
 	return cmd.New().Stdin(os.Stdin).Run("bash", "-c", fmt.Sprintf("cat '%s' | fzf", tmpFile.Name()))
+}
+
+func unique(lines []string) []string {
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if !seen[line] {
+			seen[line] = true
+			result = append(result, line)
+		}
+	}
+	return result
+}
+
+func splitLines(content string) []string {
+	lines := strings.Split(content, "\n")
+	result := make([]string, 0, len(lines))
+	for _, line := range lines {
+		s := strings.TrimSpace(line)
+		if s != "" {
+			result = append(result, s)
+		}
+	}
+	return result
 }
 
 func handleEdit(args []string) error {
@@ -159,6 +194,10 @@ func handleEdit(args []string) error {
 		Parse(args)
 	if err != nil {
 		return err
+	}
+
+	if len(args) > 0 {
+		return fmt.Errorf("unexpected extra args: %s", strings.Join(args, " "))
 	}
 
 	var conf string
