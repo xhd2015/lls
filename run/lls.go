@@ -15,9 +15,11 @@ import (
 func lls(args []string) error {
 	var configFile string
 	var listOnly bool
+	var printOnly bool
 
 	args, err := flags.String("--config", &configFile).
 		Bool("--list", &listOnly).
+		Bool("--print", &printOnly).
 		Bool("-v,--verbose", &debug).
 		Help("-h,--help", help).
 		Parse(args)
@@ -103,12 +105,18 @@ func lls(args []string) error {
 	fmt.Println()
 	fmt.Printf("%s -> %s\n", selectedCmd, expandedCmd)
 
-	openCmd := "code"
-	if cfg.OpenCmd != "" {
-		openCmd = cfg.OpenCmd
-	}
+	if !printOnly {
+		openCmd := "code"
+		if cfg.OpenCmd != "" {
+			openCmd = cfg.OpenCmd
+		}
 
-	return executeCommand(openCmd, []string{expandedCmd})
+		err := executeCommand(openCmd, []string{expandedCmd})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // llsWorktreeAt replicates the lls_worktree_at function

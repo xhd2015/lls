@@ -188,8 +188,10 @@ func splitLines(content string) []string {
 
 func handleEdit(args []string) error {
 	var configFile string
+	var editor string
 
 	args, err := flags.String("--config", &configFile).
+		String("--editor", &editor).
 		Help("-h,--help", help).
 		Parse(args)
 	if err != nil {
@@ -244,7 +246,9 @@ func handleEdit(args []string) error {
 	}
 
 	openCmd := "code"
-	if cfg.OpenCmd != "" {
+	if editor != "" {
+		openCmd = editor
+	} else if cfg.OpenCmd != "" {
 		openCmd = cfg.OpenCmd
 	}
 
