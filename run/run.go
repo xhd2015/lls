@@ -21,12 +21,13 @@ lls helps to quickly navigate through your working projects
 
 Usage: lls                         navgiate through fzf
        lls show                    show predefined project locations
-	   lls edit                    edit predefined project locations
+       lls edit                    edit predefined project locations
 
 Options:
   --config CONFIG_FILE             path to config file (default: ~/.config/lls/config.json)
   --editor EDITOR                  selected editor, default: code(VSCode), vim
   --list                           list all available directories without fzf selection
+  --print                          print the selected directory instead of opening it
   -v,--verbose                     show verbose info  
 
 Examples:
