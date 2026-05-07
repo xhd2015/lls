@@ -5,61 +5,16 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/xhd2015/lls/config"
 )
 
-// expandEnvs expands environment variables using the Envs configuration
-func expandEnvs(path string, envs []string) string {
-	const HOME_PREFIX = "~/"
-	if suff, ok := strings.CutPrefix(path, HOME_PREFIX); ok {
-		home, err := os.UserHomeDir()
-		if err == nil {
-			path = home + "/" + suff
-		}
-	}
-	return os.Expand(path, func(s string) string {
-		for _, env := range envs {
-			if strings.HasPrefix(env, s+"=") {
-				return env[len(s)+1:]
-			}
-		}
-		return os.Getenv(s)
-	})
+func collapseEnv(path string, envs []string) string {
+	return config.CollapsePath(path, envs)
 }
 
-func collapseEnv(path string, envs []string) string {
-	// e=${1/"$W/"/'$W/'}
-	// e=${e/"$X/"/'$X/'}
-	// e=${e/"$HOME/"/'~/'}
-	// echo "$e"
-
-	e := path
-	for _, env := range envs {
-		var envName string
-		var envValue string
-		idx := strings.Index(env, "=")
-		if idx < 0 {
-			envName = env
-			envValue = os.Getenv(envName)
-		} else {
-			envName = env[:idx]
-			envValue = env[idx+1:]
-		}
-		if envName == "" || envValue == "" {
-			continue
-		}
-		if suffix, ok := strings.CutPrefix(e, envValue+"/"); ok {
-			e = "$" + envName + "/" + suffix
-		}
-	}
-
-	home, err := os.UserHomeDir()
-	if err == nil {
-		if suffix, ok := strings.CutPrefix(e, home+"/"); ok {
-			e = "~/" + suffix
-		}
-	}
-
-	return e
+func expandEnvs(path string, envs []string) string {
+	return config.ExpandPath(path, envs)
 }
 
 // removeDuplicates removes duplicate entries from a slice

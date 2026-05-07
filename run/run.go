@@ -20,6 +20,7 @@ const help = `
 lls helps to quickly navigate through your working projects
 
 Usage: lls                         navgiate through fzf
+       lls p                       print selected directory instead of opening
        lls show                    show predefined project locations
        lls edit                    edit predefined project locations
 
@@ -54,6 +55,8 @@ func Main(args []string) error {
 			return handleHistory(cmdArgs)
 		case "edit", "config":
 			return handleEdit(cmdArgs)
+		case "p":
+			return lls(append([]string{"--print"}, cmdArgs...))
 		default:
 			if !strings.HasPrefix(cmd, "-") {
 				return fmt.Errorf("unrecognized command: %s", cmd)
@@ -124,9 +127,10 @@ func handleHistory(args []string) error {
 		}
 	}
 
-	var cfg config.Config
-	content, _ := os.ReadFile(conf)
-	json.Unmarshal(content, &cfg)
+	cfg, err := config.Load(conf)
+	if err != nil {
+		return err
+	}
 
 	if len(cfg.HistoryFiles) == 0 {
 		return fmt.Errorf("history_files is empty")
@@ -221,9 +225,7 @@ func handleEdit(args []string) error {
 		}
 	}
 
-	var cfg config.Config
-	content, _ := os.ReadFile(conf)
-	json.Unmarshal(content, &cfg)
+	cfg, _ := config.Load(conf)
 
 	stat, statErr := os.Stat(conf)
 	if statErr != nil {
@@ -258,6 +260,10 @@ func handleEdit(args []string) error {
 }
 
 func getConfigFile(createDir bool, fileName string) (string, error) {
+	if fileName == config.FileName {
+		return config.DefaultFile(createDir)
+	}
+
 	conf, err := os.UserConfigDir()
 	if err != nil {
 		return "", err

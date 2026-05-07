@@ -1,7 +1,6 @@
 package run
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -39,19 +38,9 @@ func lls(args []string) error {
 		}
 	}
 
-	confData, readErr := os.ReadFile(conf)
-	if readErr != nil {
-		if !os.IsNotExist(readErr) {
-			return readErr
-		}
-	}
-
-	var cfg config.Config
-	if len(confData) > 0 {
-		err = json.Unmarshal(confData, &cfg)
-		if err != nil {
-			return fmt.Errorf("reading config %s: %w", conf, err)
-		}
+	cfg, err := config.Load(conf)
+	if err != nil {
+		return err
 	}
 
 	// Generate list of directories similar to lls_list
