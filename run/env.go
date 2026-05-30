@@ -32,8 +32,8 @@ func removeDuplicates(slice []string) []string {
 	return result
 }
 
-// selectWithFzf uses fzf to select from a list of options
-func selectWithFzf(options []string, query string) (string, error) {
+// SelectWithFzf uses fzf to select from a list of options
+func SelectWithFzf(options []string, query string) (string, error) {
 	if len(options) == 0 {
 		return "", fmt.Errorf("no options available")
 	}

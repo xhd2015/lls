@@ -79,7 +79,7 @@ func lls(args []string) error {
 		query = args[0]
 	}
 
-	selectedCmd, err := selectWithFzf(collapsedDirs, query)
+	selectedCmd, err := SelectWithFzf(collapsedDirs, query)
 	if err != nil {
 		return err
 	}
